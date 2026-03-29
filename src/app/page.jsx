@@ -148,7 +148,16 @@ export default function page() {
         <div className="loginPage">
           <h1 className="loginTitle">Welcome Back!</h1>
           <p className="loginSubtitle">Sign in to continue</p>
-
+          <div className="credentialsHint">
+            <span className="credentialItem">
+              <span className="credentialKey">username</span>
+              <span className="credentialVal">user</span>
+            </span>
+            <span className="credentialItem">
+              <span className="credentialKey">password</span>
+              <span className="credentialVal">password</span>
+            </span>
+          </div>
           {/* Username */}
           <div className="fieldGroup">
             <label className="fieldLabel" htmlFor="email">
