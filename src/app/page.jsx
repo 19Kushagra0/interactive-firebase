@@ -4,6 +4,10 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import "@/app/style.css";
 import styles from "@/app/style/eye.module.css";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { app } from "@/lib/firebase";
+
+const auth = getAuth(app);
 
 const IMAGES = {
   normal: "/images/normal.png",
@@ -60,82 +64,32 @@ export default function page() {
     movePupil(leftEyeRef.current, leftPupilRef.current, mouseX, mouseY);
     movePupil(rightEyeRef.current, rightPupilRef.current, mouseX, mouseY);
   };
-
   // Login
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [checkingAuth, setCheckingAuth] = useState(true);
-
-  useEffect(() => {
-    const getMe = async () => {
-      try {
-        const response = await fetch("/api/me", {
-          method: "GET",
-        });
-
-        if (!response.ok) {
-          setCheckingAuth(false);
-          return;
-        }
-
-        const data = await response.json();
-        console.log(data);
-
-        if (data.role === "manager") {
-          router.replace("/dashboard");
-        } else if (data.role === "shopkeeper") {
-          router.replace("/shop");
-        } else {
-          setCheckingAuth(false);
-        }
-      } catch (err) {
-        // Network error or fetch failure — still show the login form
-        console.error("Auth check failed:", err);
-        setCheckingAuth(false);
-      }
-    };
-    getMe();
-  }, [router]);
 
   //    login will NOT appear
-  if (checkingAuth) {
-    return null;
-  }
 
   const handleLogin = async () => {
-    console.log(username);
-    console.log(password);
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
 
-    setUsername("");
-    setPassword("");
-
-    const response = await fetch("/api/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (!response.ok) {
-      setImage("scared");
-
-      alert("Please provide username and password");
-
-      return;
-    }
-
-    const data = await response.json();
-    console.log(data);
-
-    if (data.role === "manager") {
+      console.log(userCredential.user);
+      setEmail("");
+      setPassword("");
       router.push("/dashboard");
-    } else if (data.role === "shopkeeper") {
-      router.push("/shop");
+    } catch (error) {
+      setImage("scared");
+      alert(error.message);
+      setEmail("");
+      setPassword("");
     }
   };
-
   return (
     <div onMouseMove={handleMouseMove} className="page">
       <div className="loginCard">
@@ -195,13 +149,19 @@ export default function page() {
           <h1 className="loginTitle">Welcome Back!</h1>
           <p className="loginSubtitle">Sign in to continue</p>
           <div className="credentialsHint">
-            <span className="credentialItem"><span className="credentialKey">username</span><span className="credentialVal">user</span></span>
-            <span className="credentialItem"><span className="credentialKey">password</span><span className="credentialVal">password</span></span>
+            <span className="credentialItem">
+              <span className="credentialKey">username</span>
+              <span className="credentialVal">user</span>
+            </span>
+            <span className="credentialItem">
+              <span className="credentialKey">password</span>
+              <span className="credentialVal">password</span>
+            </span>
           </div>
           {/* Username */}
           <div className="fieldGroup">
-            <label className="fieldLabel" htmlFor="username">
-              Username
+            <label className="fieldLabel" htmlFor="email">
+              Email
             </label>
             <div className="inputWrapper">
               {/* Person icon */}
@@ -217,13 +177,13 @@ export default function page() {
                 <circle cx="12" cy="7" r="4" />
               </svg>
               <input
-                id="username"
+                id="email"
                 className="loginInput"
-                type="text"
-                placeholder="Enter your username"
-                value={username}
+                type="email"
+                placeholder="Enter your email"
+                value={email}
                 onChange={(e) => {
-                  setUsername(e.target.value);
+                  setEmail(e.target.value);
                   setImage("normal");
                 }}
               />
